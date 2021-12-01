@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>three.js webgl - simple text from json</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+</head>
+
+<body>
+	<script type="module">
+
+		import * as THREE from '../../three.js/build/three.module.js';
+
+		import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
+		import { FontLoader } from '../../three.js/examples/jsm/loaders/FontLoader.js';
+
+		let camera, scene, renderer;
+
+		init();
+
+		function init() {
+
+			camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
+			camera.position.set(0, -1000, 2000);
+
+			scene = new THREE.Scene();
+			scene.background = new THREE.Color(0xf0f0f0);
+
+			const loader = new FontLoader();
+
+			loader.load('../../three.js/examples/fonts/helvetiker_regular.typeface.json', function (font) {
+				// loader.load( './Helvetica_Regular.json', function ( font ) {
+
+				const color = 0x000000;
+
+				const matDark = new THREE.LineBasicMaterial({
+					color: color,
+					side: THREE.DoubleSide
+				});
+
+				const matLite = new THREE.MeshBasicMaterial({
+					color: color,
+					transparent: true,
+					opacity: 1,
+					side: THREE.DoubleSide
+				});
+
+				const message = 'Bijtend\nBlanco';
+
+				const generateGeometry = (message) => {
+					const shapes = font.generateShapes(message, 100);
+					const geometry = new THREE.ShapeGeometry(shapes);
+					geometry.computeBoundingBox();
+					return geometry;
+				}
+
+				const geometryBijtend = generateGeometry('Bijtend');
+				const geometryBlanco = generateGeometry('Blanco');
+
+				const textBijtend = new THREE.Mesh(geometryBijtend, matLite);
+				textBijtend.position.y = 130;
+
+				const textBlanco = new THREE.Mesh(geometryBlanco, matLite);
+
+				var text = new THREE.Group();
+				text.add(textBijtend);
+				text.add(textBlanco);
+				scene.add(text);
+
+				const boundingBox = new THREE.Box3().setFromObject(text).max;
+
+				text.position.x = -boundingBox.x / 2
+				text.position.y = -boundingBox.y / 2
+
+				// make line shape ( N.B. edge view remains visible )
+
+				// const holeShapes = [];
+				// for (let i = 0; i < shapes.length; i++) {
+				// 	const shape = shapes[i];
+				// 	console.log(shape.holes);
+				// 	if (shape.holes && shape.holes.length > 0) {
+				// 		for (let j = 0; j < shape.holes.length; j++) {
+				// 			const hole = shape.holes[j];
+				// 			holeShapes.push(hole);
+				// 		}
+				// 	}
+				// }
+				// shapes.push.apply(shapes, holeShapes);
+
+				// const lineText = new THREE.Object3D();
+				// for ( let i = 0; i < shapes.length; i ++ ) {
+				// 	const shape = shapes[ i ];
+				// 	const points = shape.getPoints();
+				// 	const geometry = new THREE.BufferGeometry().setFromPoints( points );
+				// 	geometry.translate( xMid, 0, 0 );
+				// 	const lineMesh = new THREE.Line( geometry, matDark );
+				// 	lineText.add( lineMesh );
+				// }
+				// scene.add( lineText );
+
+				render();
+
+			}); //end load function
+
+
+
+			renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			document.body.appendChild(renderer.domElement);
+
+			const controls = new OrbitControls(camera, renderer.domElement);
+			controls.target.set(0, 0, 0);
+			controls.update();
+
+			controls.addEventListener('change', render);
+
+			window.addEventListener('resize', onWindowResize);
+
+		} // end init
+
+		function onWindowResize() {
+
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			render();
+
+		}
+
+		function render() {
+
+			renderer.render(scene, camera);
+
+		}
+
+	</script>
+
+</body>
+
+</html>
